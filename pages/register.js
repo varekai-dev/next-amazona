@@ -10,7 +10,7 @@ import Cookies from 'js-cookie';
 import { Controller, useForm } from 'react-hook-form';
 import { useSnackbar } from 'notistack';
 
-export default function Login() {
+export default function Register() {
 	const {
 		handleSubmit,
 		control,
@@ -26,12 +26,17 @@ export default function Login() {
 	}
 	const classes = useStyles();
 
-	const submitHandler = async ({ email, password }) => {
+	const submitHandler = async ({ email, password, name, confirmPassword }) => {
 		closeSnackbar();
+		if (password !== confirmPassword) {
+			enqueueSnackbar('Passwords does not match', { variant: 'error' });
+			return;
+		}
 		try {
-			const { data } = await axios.post('/api/users/login', {
+			const { data } = await axios.post('/api/users/register', {
 				email,
-				password
+				password,
+				name
 			});
 			dispatch({ type: 'USER_LOGIN', payload: data });
 			Cookies.set('userInfo', JSON.stringify(data));
@@ -44,9 +49,27 @@ export default function Login() {
 		<Layout title="Login">
 			<form onSubmit={handleSubmit(submitHandler)} className={classes.form}>
 				<Typography component="h1" variant="h1">
-					Login
+					Register
 				</Typography>
 				<List>
+					<ListItem>
+						<Controller
+							name="name"
+							control={control}
+							defaultValue=""
+							rules={{ required: true, minLength: 2 }}
+							render={({ field }) => (
+								<TextField
+									error={Boolean(errors.name)}
+									helperText={errors.name ? (errors.name.type === 'minLength' ? 'Name length is more than 2' : 'Name is required') : ''}
+									variant="outlined"
+									fullWidth
+									id="name"
+									label="Name"
+									inputProps={{ type: 'name' }}
+									{...field}></TextField>
+							)}></Controller>
+					</ListItem>
 					<ListItem>
 						<Controller
 							name="email"
@@ -84,14 +107,32 @@ export default function Login() {
 							)}></Controller>
 					</ListItem>
 					<ListItem>
+						<Controller
+							name="confirmPassword"
+							control={control}
+							defaultValue=""
+							rules={{ required: true, minLength: 6 }}
+							render={({ field }) => (
+								<TextField
+									error={Boolean(errors.confirmPassword)}
+									helperText={errors.confirmPassword ? (errors.confirmPassword.type === 'minLength' ? 'Password length is more than 5' : 'Password is required') : ''}
+									variant="outlined"
+									fullWidth
+									id="confirmPassword"
+									label="Confirm Password"
+									inputProps={{ type: 'password' }}
+									{...field}></TextField>
+							)}></Controller>
+					</ListItem>
+					<ListItem>
 						<Button variant="contained" type="submit" fullWidth color="primary">
-							Login
+							Register
 						</Button>
 					</ListItem>
 					<ListItem>
-						Don't have an account ?{' '}
-						<NextLink href={`/register?redirect=${redirect || '/'}`} passHref>
-							<Link> Register</Link>
+						Already have an account ?{' '}
+						<NextLink href={`/login?redirect=${redirect || '/'}`} passHref>
+							<Link> Login</Link>
 						</NextLink>
 					</ListItem>
 				</List>
