@@ -25,7 +25,10 @@ export default function Shipping() {
 	const classes = useStyles();
 
 	const submitHandler = ({ fullName, address, city, postalCode, country }) => {
-		dispatch({ type: 'SAVE_SHIPPING_ADDRESS', payload: { fullName, address, city, postalCode, country } });
+		dispatch({
+			type: 'SAVE_SHIPPING_ADDRESS',
+			payload: { fullName, address, city, postalCode, country }
+		});
 		Cookies.set('shippingAddress', JSON.stringify({ fullName, address, city, postalCode, country }));
 		router.push('/payment');
 	};
@@ -33,11 +36,13 @@ export default function Shipping() {
 		if (!userInfo) {
 			router.push('/login?redirect=/shipping');
 		}
-		setValue('fullName', shippingAddress.fullName);
-		setValue('address', shippingAddress.address);
-		setValue('country', shippingAddress.country);
-		setValue('city', shippingAddress.city);
-		setValue('postalCode', shippingAddress.postalCode);
+		if (shippingAddress) {
+			setValue('fullName', shippingAddress.fullName);
+			setValue('address', shippingAddress.address);
+			setValue('country', shippingAddress.country);
+			setValue('city', shippingAddress.city);
+			setValue('postalCode', shippingAddress.postalCode);
+		}
 	}, []);
 	return (
 		<Layout title="Shipping Address">

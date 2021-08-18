@@ -21,8 +21,9 @@ function PlaceOrder() {
 		userInfo,
 		cart: { shippingAddress, cartItems, paymentMethod }
 	} = state;
+
 	const round2 = (num) => Math.round(num * 100 + Number.EPSILON) / 100;
-	const itemsPrice = round2(cartItems.reduce((a, c) => a + c.price * c.quantity, 0));
+	const itemsPrice = round2(cartItems?.reduce((a, c) => a + c.price * c.quantity, 0));
 	const shippingPrice = itemsPrice > 200 ? 0 : 15;
 	const taxPrice = round2(itemsPrice * 0.15);
 	const totalPrice = round2(itemsPrice + shippingPrice + taxPrice);
@@ -30,6 +31,9 @@ function PlaceOrder() {
 	React.useEffect(() => {
 		if (!paymentMethod) {
 			router.push('/payment');
+		}
+		if (cartItems.length === 0) {
+			router.push('/cart');
 		}
 	}, []);
 
@@ -63,11 +67,11 @@ function PlaceOrder() {
 		} catch (err) {
 			enqueueSnackbar(getError(err), { variant: 'error' });
 		} finally {
-			setLoadind(false);
+			setLoading(false);
 		}
 	};
 	return (
-		<Layout title="Shopping Cart">
+		<Layout title="Place Order">
 			<CheckoutWizard activeStep={3} />
 			<Typography component="h1" variant="h1">
 				Place Order
@@ -81,9 +85,11 @@ function PlaceOrder() {
 									Shipping Address
 								</Typography>
 							</ListItem>
-							<ListItem>
-								{shippingAddress.fullName}, {shippingAddress.address},{shippingAddress.city}, {shippingAddress.postalCode}, {shippingAddress.country}
-							</ListItem>
+							{shippingAddress && (
+								<ListItem>
+									{shippingAddress.fullName}, {shippingAddress.address}, {shippingAddress.city}, {shippingAddress.postalCode}, {shippingAddress.country}
+								</ListItem>
+							)}
 						</List>
 					</Card>
 					<Card className={s.section}>
