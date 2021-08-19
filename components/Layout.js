@@ -44,8 +44,11 @@ const Layout = ({ title, children, description }) => {
 	const loginClickHandler = (e) => {
 		setAnchorEl(e.currentTarget);
 	};
-	const loginMenuCloseHandler = () => {
+	const loginMenuCloseHandler = (e, redirect) => {
 		setAnchorEl(null);
+		if (redirect) {
+			router.push(redirect);
+		}
 	};
 	const logoutClickHandler = () => {
 		setAnchorEl(null);
@@ -89,9 +92,10 @@ const Layout = ({ title, children, description }) => {
 									<Button aria-controls="simple-menu" aria-haspopup="true" onClick={loginClickHandler} className={s.navbarButton}>
 										{userInfo.name}
 									</Button>
-									<Menu id="simple-menu" anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={loginMenuCloseHandler}>
-										<MenuItem onClick={loginMenuCloseHandler}>Profile</MenuItem>
-										<MenuItem onClick={loginMenuCloseHandler}>My account</MenuItem>
+									<Menu id="simple-menu" anchorEl={anchorEl} keepMounted open={Boolean(anchorEl)} onClose={(e) => loginMenuCloseHandler(e, false)}>
+										<MenuItem onClick={(e) => loginMenuCloseHandler(e, '/profile')}>Profile</MenuItem>
+										<MenuItem onClick={(e) => loginMenuCloseHandler(e, '/order-history')}>Order History</MenuItem>
+										{userInfo.isAdmin && <MenuItem onClick={(e) => loginMenuCloseHandler(e, '/admin/dashboard')}>Admin Dashboard</MenuItem>}
 										<MenuItem onClick={logoutClickHandler}>Logout</MenuItem>
 									</Menu>
 								</>

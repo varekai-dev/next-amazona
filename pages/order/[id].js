@@ -1,4 +1,3 @@
-import { Grid, Table, TableContainer, Typography, TableHead, TableRow, TableCell, TableBody, Link, Button, Card, List, ListItem, Checkbox, CircularProgress } from '@material-ui/core';
 import React, { useContext } from 'react';
 import dynamic from 'next/dynamic';
 import Layout from '../../components/Layout';
@@ -6,6 +5,7 @@ import { Store } from '../../utils/Store';
 import NextLink from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/dist/client/router';
+import { Grid, Table, TableContainer, Typography, TableHead, TableRow, TableCell, TableBody, Link, Card, List, ListItem, CircularProgress, Button, ListItemText } from '@material-ui/core';
 import useStyles from '../../utils/styles';
 import CheckoutWizard from '../../components/CheckoutWizard';
 import { getError } from '../../utils/error';
@@ -43,7 +43,7 @@ function Order({ params }) {
 	const s = useStyles();
 	const { state } = useContext(Store);
 	const { userInfo } = state;
-	const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+	const { enqueueSnackbar } = useSnackbar();
 	const [{ loading, error, order, successPay }, dispatch] = React.useReducer(reducer, { loading: true, order: {}, error: '' });
 
 	const { shippingAddress, paymentMethod, orderItems, itemsPrice, taxPrice, shippingPrice, totalPrice, isPaid, paidAt, isDelivered, deliveredAt } = order;
@@ -128,7 +128,7 @@ function Order({ params }) {
 			{loading ? (
 				<CircularProgress />
 			) : error ? (
-				<Typography className={s.error}>{errror}</Typography>
+				<Typography className={s.error}>{error}</Typography>
 			) : (
 				<Grid container spacing={1}>
 					<Grid item md={9} xs={12}>
