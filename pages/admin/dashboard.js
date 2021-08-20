@@ -61,6 +61,11 @@ function AdminDashboard() {
 									<ListItemText primary="Orders"></ListItemText>
 								</ListItem>
 							</NextLink>
+							<NextLink href="/admin/products" passHref>
+								<ListItem button component="a">
+									<ListItemText primary="Products"></ListItemText>
+								</ListItem>
+							</NextLink>
 						</List>
 					</Card>
 				</Grid>
@@ -156,7 +161,7 @@ function AdminDashboard() {
 										]
 									}}
 									options={{
-										legend: { display: true, position: 'rigth' }
+										legend: { display: true, position: 'right' }
 									}}></Bar>
 							</ListItem>
 						</List>
