@@ -1,13 +1,20 @@
 import nc from 'next-connect';
-import Product from '../../../models/Product';
-import { isAuth, isAdmin } from '../../../utils/auth';
-import db from '../../../utils/db';
-import { onError } from '../../../utils/error';
+import Product from '../../../../models/Product';
+import { isAuth, isAdmin } from '../../../../utils/auth';
+import db from '../../../../utils/db';
+import { onError } from '../../../../utils/error';
 
 const handler = nc({
 	onError
 });
 handler.use(isAuth, isAdmin);
+
+handler.get(async (req, res) => {
+	await db.connect();
+	const products = await Product.find({});
+	await db.disconnect();
+	res.send(products);
+});
 
 handler.post(async (req, res) => {
 	await db.connect();
@@ -25,8 +32,9 @@ handler.post(async (req, res) => {
 		numReview: 0
 	});
 
+	const product = await newProduct.save();
 	await db.disconnect();
-	res.send(orders);
+	res.send({ message: 'Product Created', product });
 });
 
 export default handler;

@@ -62,6 +62,7 @@ function AdminDashboard() {
 			const { data } = await axios.post(`/api/admin/products`, {}, { headers: { authorization: `Bearer ${userInfo.token}` } });
 			enqueueSnackbar('Product created successfully', { variant: 'success' });
 			dispatch({ type: 'CREATE_SUCCESS' });
+			router.push(`/admin/product/${data.product._id}`);
 		} catch (err) {
 			dispatch({ type: 'CREATE_FAIL' });
 			enqueueSnackbar(getError(err), { variant: 'error' });
