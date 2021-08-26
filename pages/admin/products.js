@@ -28,15 +28,26 @@ function reducer(state, action) {
 		case 'CREATE_FAIL': {
 			return { ...state, loadingCreate: false, error: action.payload };
 		}
+		case 'DELETE_REQUEST':
+			return { ...state, loadingDelete: true, error: '' };
+		case 'DELETE_SUCCESS': {
+			return { ...state, loadingDelete: false, successDelete: true };
+		}
+		case 'DELETE_FAIL': {
+			return { ...state, loadingDelete: false };
+		}
+		case 'DELETE_RESET': {
+			return { ...state, loadingDelete: false, successDelete: false };
+		}
 	}
 }
 
-function AdminDashboard() {
+function AdminProducts() {
 	const router = useRouter();
 	const { state } = React.useContext(Store);
 	const { userInfo } = state;
 	const s = useStyles();
-	const [{ loading, error, products, loadingCreate }, dispatch] = React.useReducer(reducer, { loading: true, products: [], error: '' });
+	const [{ loading, error, products, loadingCreate, successDelete, loadingDelete }, dispatch] = React.useReducer(reducer, { loading: true, products: [], error: '', successDelete: false });
 	const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 	React.useEffect(() => {
 		if (!userInfo) {
@@ -51,8 +62,12 @@ function AdminDashboard() {
 				dispatch({ type: 'FETCH_FAIL', payload: getError(err) });
 			}
 		};
-		fetchData();
-	}, []);
+		if (successDelete) {
+			dispatch({ type: 'DELETE_RESET' });
+		} else {
+			fetchData();
+		}
+	}, [successDelete]);
 	const createHandler = async () => {
 		if (!window.confirm('Are you sure?')) {
 			return;
@@ -65,6 +80,20 @@ function AdminDashboard() {
 			router.push(`/admin/product/${data.product._id}`);
 		} catch (err) {
 			dispatch({ type: 'CREATE_FAIL' });
+			enqueueSnackbar(getError(err), { variant: 'error' });
+		}
+	};
+	const deleteHandler = async (productId) => {
+		if (!window.confirm('Are you sure?')) {
+			return;
+		}
+		try {
+			dispatch({ type: 'DELETE_REQUEST' });
+			await axios.delete(`/api/admin/products/${productId}`, { headers: { authorization: `Bearer ${userInfo.token}` } });
+			enqueueSnackbar('Product deleted successfully', { variant: 'success' });
+			dispatch({ type: 'DELETE_SUCCESS' });
+		} catch (err) {
+			dispatch({ type: 'DELETE_FAIL' });
 			enqueueSnackbar(getError(err), { variant: 'error' });
 		}
 	};
@@ -89,6 +118,11 @@ function AdminDashboard() {
 									<ListItemText primary="Products"></ListItemText>
 								</ListItem>
 							</NextLink>
+							<NextLink href="/admin/users" passHref>
+								<ListItem button component="a">
+									<ListItemText primary="Users"></ListItemText>
+								</ListItem>
+							</NextLink>
 						</List>
 					</Card>
 				</Grid>
@@ -102,6 +136,7 @@ function AdminDashboard() {
 										<Typography component="h1" variant="h1">
 											Products
 										</Typography>
+										{loadingDelete && <CircularProgress />}
 									</Grid>
 									<Grid align="right" item xs={6}>
 										<Button onClick={createHandler} color="primary" variant="contained">
@@ -145,7 +180,7 @@ function AdminDashboard() {
 																	Edit
 																</Button>
 															</NextLink>{' '}
-															<Button size="small" variant="contained">
+															<Button size="small" variant="contained" onClick={() => deleteHandler(product._id)}>
 																Delete
 															</Button>
 														</TableCell>
@@ -164,4 +199,4 @@ function AdminDashboard() {
 	);
 }
 
-export default dynamic(() => Promise.resolve(AdminDashboard), { ssr: false });
+export default dynamic(() => Promise.resolve(AdminProducts), { ssr: false });

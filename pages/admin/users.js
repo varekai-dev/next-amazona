@@ -8,27 +8,39 @@ import { Grid, Typography, Card, List, ListItem, CircularProgress, Button, ListI
 import useStyles from '../../utils/styles';
 import axios from 'axios';
 import NextLink from 'next/link';
+import { useSnackbar } from 'notistack';
 
 function reducer(state, action) {
 	switch (action.type) {
 		case 'FETCH_REQUEST':
 			return { ...state, loading: true, error: '' };
 		case 'FETCH_SUCCESS': {
-			return { ...state, loading: false, orders: action.payload, error: '' };
+			return { ...state, loading: false, users: action.payload, error: '' };
 		}
 		case 'FETCH_FAIL': {
 			return { ...state, loading: false, error: action.payload };
 		}
+		case 'DELETE_REQUEST':
+			return { ...state, loadingDelete: true, error: '' };
+		case 'DELETE_SUCCESS': {
+			return { ...state, loadingDelete: false, successDelete: true };
+		}
+		case 'DELETE_FAIL': {
+			return { ...state, loadingDelete: false };
+		}
+		case 'DELETE_RESET': {
+			return { ...state, loadingDelete: false, successDelete: false };
+		}
 	}
 }
 
-function AdminOrders() {
+function AdminUsers() {
 	const router = useRouter();
 	const { state } = React.useContext(Store);
 	const { userInfo } = state;
 	const s = useStyles();
-	const [{ loading, error, orders }, dispatch] = React.useReducer(reducer, { loading: true, orders: [], error: '' });
-
+	const [{ loading, error, users, successDelete, loadingDelete }, dispatch] = React.useReducer(reducer, { loading: true, users: [], error: '', successDelete: false });
+	const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 	React.useEffect(() => {
 		if (!userInfo) {
 			router.push('/login');
@@ -36,16 +48,35 @@ function AdminOrders() {
 		const fetchData = async () => {
 			try {
 				dispatch({ type: 'FETCH_REQUEST' });
-				const { data } = await axios.get(`/api/admin/orders`, { headers: { authorization: `Bearer ${userInfo.token}` } });
+				const { data } = await axios.get(`/api/admin/users`, { headers: { authorization: `Bearer ${userInfo.token}` } });
 				dispatch({ type: 'FETCH_SUCCESS', payload: data });
 			} catch (err) {
 				dispatch({ type: 'FETCH_FAIL', payload: getError(err) });
 			}
 		};
-		fetchData();
-	}, []);
+		if (successDelete) {
+			dispatch({ type: 'DELETE_RESET' });
+		} else {
+			fetchData();
+		}
+	}, [successDelete]);
+
+	const deleteHandler = async (userId) => {
+		if (!window.confirm('Are you sure?')) {
+			return;
+		}
+		try {
+			dispatch({ type: 'DELETE_REQUEST' });
+			await axios.delete(`/api/admin/users/${userId}`, { headers: { authorization: `Bearer ${userInfo.token}` } });
+			enqueueSnackbar('User deleted successfully', { variant: 'success' });
+			dispatch({ type: 'DELETE_SUCCESS' });
+		} catch (err) {
+			dispatch({ type: 'DELETE_FAIL' });
+			enqueueSnackbar(getError(err), { variant: 'error' });
+		}
+	};
 	return (
-		<Layout title="Order History">
+		<Layout title="User History">
 			<Grid container spacing={1}>
 				<Grid item md={3} xs={12}>
 					<Card className={s.section}>
@@ -56,7 +87,7 @@ function AdminOrders() {
 								</ListItem>
 							</NextLink>
 							<NextLink href="/admin/orders" passHref>
-								<ListItem selected button component="a">
+								<ListItem button component="a">
 									<ListItemText primary="Orders"></ListItemText>
 								</ListItem>
 							</NextLink>
@@ -66,7 +97,7 @@ function AdminOrders() {
 								</ListItem>
 							</NextLink>
 							<NextLink href="/admin/users" passHref>
-								<ListItem button component="a">
+								<ListItem selected button component="a">
 									<ListItemText primary="Users"></ListItemText>
 								</ListItem>
 							</NextLink>
@@ -79,8 +110,9 @@ function AdminOrders() {
 						<List>
 							<ListItem>
 								<Typography component="h1" variant="h1">
-									Orders
+									Users
 								</Typography>
+								{loadingDelete && <CircularProgress />}
 							</ListItem>
 							<ListItem>
 								{loading ? (
@@ -93,27 +125,27 @@ function AdminOrders() {
 											<TableHead>
 												<TableRow>
 													<TableCell>ID</TableCell>
-													<TableCell>USER</TableCell>
-													<TableCell>DATE</TableCell>
-													<TableCell>TOTAL</TableCell>
-													<TableCell>PAID</TableCell>
-													<TableCell>DELIVERED</TableCell>
-													<TableCell>ACTION</TableCell>
+													<TableCell>NAME</TableCell>
+													<TableCell>EMAIL</TableCell>
+													<TableCell>ISADMIN</TableCell>
 												</TableRow>
 											</TableHead>
 											<TableBody>
-												{orders.map((order) => (
-													<TableRow key={order._id}>
-														<TableCell>{order._id.substring(20, 24)}</TableCell>
-														<TableCell>{order.user ? order.user.name : 'DELETED USER'}</TableCell>
-														<TableCell>{order.createdAt}</TableCell>
-														<TableCell>${order.totalPrice}</TableCell>
-														<TableCell>{order.isPaid ? `Paid at ${order.paidAt}` : 'Not paid'}</TableCell>
-														<TableCell>{order.isDelivered ? `Delivered at ${order.deliveredAt}` : 'Not delivered'}</TableCell>
+												{users.map((user) => (
+													<TableRow key={user._id}>
+														<TableCell>{user._id.substring(20, 24)}</TableCell>
+														<TableCell>{user.name}</TableCell>
+														<TableCell>{user.email}</TableCell>
+														<TableCell>{user.isAdmin ? 'YES' : 'NO'}</TableCell>
 														<TableCell>
-															<NextLink passHref href={`/order/${order._id}`}>
-																<Button variant="contained">Details</Button>
-															</NextLink>
+															<NextLink passHref href={`/admin/user/${user._id}`}>
+																<Button size="small" variant="contained">
+																	Edit
+																</Button>
+															</NextLink>{' '}
+															<Button size="small" variant="contained" onClick={() => deleteHandler(user._id)}>
+																Delete
+															</Button>
 														</TableCell>
 													</TableRow>
 												))}
@@ -130,4 +162,4 @@ function AdminOrders() {
 	);
 }
 
-export default dynamic(() => Promise.resolve(AdminOrders), { ssr: false });
+export default dynamic(() => Promise.resolve(AdminUsers), { ssr: false });
