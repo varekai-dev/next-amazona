@@ -7,6 +7,7 @@ import Product from '../models/Product';
 import axios from 'axios';
 import { Store } from '../utils/Store';
 import { useRouter } from 'next/dist/client/router';
+import Rating from '@material-ui/lab/Rating';
 
 export default function Home({ products }) {
 	const router = useRouter();
@@ -38,6 +39,7 @@ export default function Home({ products }) {
 										<CardMedia component="img" image={product.image} title={product.name} />
 										<CardContent>
 											<Typography>{product.name}</Typography>
+											<Rating value={product.rating} readOnly />
 										</CardContent>
 									</CardActionArea>
 								</NextLink>
@@ -58,7 +60,7 @@ export default function Home({ products }) {
 
 export async function getServerSideProps() {
 	await db.connect();
-	const products = await Product.find({}).lean();
+	const products = await Product.find({}, '-reviews').lean();
 	await db.disconnect();
 	return {
 		props: {
