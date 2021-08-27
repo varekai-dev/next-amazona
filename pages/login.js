@@ -22,9 +22,11 @@ export default function Login() {
 	const { redirect } = router.query;
 	const { state, dispatch } = React.useContext(Store);
 	const { userInfo } = state;
-	if (userInfo) {
-		router.push('/');
-	}
+	React.useEffect(() => {
+		if (userInfo) {
+			router.push('/');
+		}
+	}, []);
 	const classes = useStyles();
 
 	const submitHandler = async ({ email, password }) => {
